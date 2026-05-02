@@ -177,10 +177,11 @@ body{font-family:'Barlow',sans-serif;background:var(--smoke);color:var(--text);m
 
       <!-- Abas -->
       <div class="tabs">
-        <button class="tab-btn active" onclick="showTab('gaps')">🔍 Gaps</button>
-        <button class="tab-btn" onclick="showTab('matriz')">📋 Matriz</button>
-        <button class="tab-btn" onclick="showTab('evolucao')">📈 Evolução</button>
-        <button class="tab-btn" onclick="showTab('ia')">🤖 IA</button>
+        <button class="tab-btn active" id="tbtn-gaps" onclick="showTab('gaps')">🔍 Gaps</button>
+        <button class="tab-btn" id="tbtn-matriz" onclick="showTab('matriz')">📋 Matriz</button>
+        <button class="tab-btn" id="tbtn-evolucao" onclick="showTab('evolucao')">📈 Evolução</button>
+        <button class="tab-btn" id="tbtn-ia" onclick="showTab('ia')">🤖 IA</button>
+        <button class="tab-btn" onclick="showTab('sugestoes')" id="tbtn-sugestoes">💬 Sugestões</button>
       </div>
 
       <div class="tab-content active" id="tab-gaps">
@@ -211,6 +212,10 @@ body{font-family:'Barlow',sans-serif;background:var(--smoke);color:var(--text);m
         <div id="ai-output"></div>
       </div>
       </div><!-- fecha tab-ia -->
+
+      <div class="tab-content" id="tab-sugestoes">
+        <div id="sugestoes-container"></div>
+      </div>
 
     </div>
   </div>
@@ -277,6 +282,7 @@ async function loadData(){
       filteredData=[...allData];
       renderDashboard(filteredData);
       renderEvolucao(allData);
+      renderSugestoes(allData);
     }
   }catch(e){
     console.error(e);
@@ -445,18 +451,16 @@ Forneça de forma prática e direta:
 
 
 function showTab(name){
-  document.querySelectorAll(".tab-btn").forEach(b=>{
-    const names=["gaps","matriz","evolucao","ia"];
-    b.classList.toggle("active",names[b.getAttribute("data-tab")]===name||b.textContent.toLowerCase().includes(name.split("")[1]));
+  const tabs=["gaps","matriz","evolucao","ia","sugestoes"];
+  tabs.forEach(t=>{
+    const tab=document.getElementById("tab-"+t);
+    const btn=document.getElementById("tbtn-"+t);
+    if(tab) tab.classList.toggle("active",t===name);
+    if(btn) btn.classList.toggle("active",t===name);
   });
-  // toggle por id
-  ["tab-gaps","tab-matriz","tab-evolucao","tab-ia"].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.classList.toggle("active",id==="tab-"+name);
-  });
+  // fallback para botões sem id (compatibilidade)
   document.querySelectorAll(".tab-btn").forEach((b,i)=>{
-    const tabs=["gaps","matriz","evolucao","ia"];
-    b.classList.toggle("active",tabs[i]===name);
+    if(i<tabs.length) b.classList.toggle("active",tabs[i]===name);
   });
 }
 
@@ -540,6 +544,49 @@ function renderEvolucao(data){
     return`<div class="evol-card">
       <div class="evol-name">👷 ${nome} <span style="font-size:13px;font-weight:400;color:var(--muted)">${regs.length} avaliações</span> ${evoBadge}</div>
       <div style="overflow-x:auto"><table class="evol-table"><thead>${thead}</thead><tbody>${rows}</tbody></table></div>
+    </div>`;
+  }).join("");
+}
+
+function renderSugestoes(data){
+  const container=document.getElementById("sugestoes-container");
+  if(!container)return;
+
+  const comSugestao=data.filter(r=>r.sugestoes&&r.sugestoes.trim()!=="");
+
+  // Atualizar badge no botão
+  const btn=document.getElementById("tbtn-sugestoes");
+  if(btn) btn.textContent=`💬 Sugestões${comSugestao.length>0?" ("+comSugestao.length+")":""}`;
+
+  if(comSugestao.length===0){
+    container.innerHTML=`<div class="sug-empty">
+      <div style="font-size:40px;margin-bottom:12px">💬</div>
+      <div style="font-weight:600;color:var(--coal);margin-bottom:6px">Nenhuma sugestão registrada ainda</div>
+      <div>As sugestões deixadas pelos mecânicos no formulário aparecerão aqui.</div>
+    </div>`;
+    return;
+  }
+
+  // Ordenar por data mais recente
+  const ordenados=[...comSugestao].sort((a,b)=>new Date(b.dataISO||b.id)-new Date(a.dataISO||a.id));
+
+  container.innerHTML=ordenados.map(r=>{
+    const ov=overallAvg(r);
+    const c=scoreClass(ov);
+    return`<div class="sug-card">
+      <div class="sug-nome">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--coal);color:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0">${r.nome.charAt(0).toUpperCase()}</div>
+        ${r.nome}
+        ${ov!==null?`<span class="score-cell ${c}" style="margin-left:auto">${ov.toFixed(1)}</span>`:""}
+      </div>
+      <div class="sug-meta">
+        ${r.dataCurta||r.data?.split(",")[0]||"—"}
+        ${r.semana?" · "+r.semana:""}
+        ${r.cargo?" · "+r.cargo:""}
+        ${r.setor?" · "+r.setor:""}
+      </div>
+      <div class="sug-texto">${r.sugestoes.replace(/
+/g,"<br>")}</div>
     </div>`;
   }).join("");
 }
