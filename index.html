@@ -69,6 +69,11 @@ input[type=text]:focus,select:focus{outline:none;border-color:var(--amber)}
 .toast.error{background:#e74c3c;color:#fff}
 .toast.info{background:var(--coal);color:#fff}
 .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.suggestion-card{border-top:5px solid #8e44ad}
+.suggestion-card h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:#1c1c2e;margin-bottom:6px}
+.suggestion-card p{font-size:14px;color:#7f8c9a;margin-bottom:16px}
+.suggestion-textarea{width:100%;min-height:120px;padding:13px 14px;border:2px solid #dde2ea;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;color:#2c3e50;resize:vertical;outline:none;transition:border-color .2s;line-height:1.6}
+.suggestion-textarea:focus{border-color:#8e44ad}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -142,6 +147,13 @@ input[type=text]:focus,select:focus{outline:none;border-color:var(--amber)}
   </div>
 
   <div id="sections-container"></div>
+
+  <!-- SUGESTÕES -->
+  <div class="card suggestion-card">
+    <h2>💬 Sugestões e Comentários</h2>
+    <p>Espaço livre para você compartilhar sugestões, dúvidas, dificuldades no trabalho ou qualquer comentário que queira deixar para a gestão.</p>
+    <textarea class="suggestion-textarea" id="sugestoes" placeholder="Digite aqui suas sugestões, comentários ou observações..."></textarea>
+  </div>
 
   <div class="card submit-wrap">
     <p class="progress-summary" id="progress-text">Responda todas as perguntas para enviar.</p>
@@ -381,6 +393,7 @@ Deseja enviar mesmo assim?`))return;
     dataCurta: agora.toLocaleDateString("pt-BR"),    // ex: 02/05/2026
     semana: semanaISO,                               // ex: 2026-S1
     nome,
+    sugestoes: (document.getElementById("sugestoes").value||"").trim(),
     cargo: document.getElementById("cargo").value,
     turno: document.getElementById("turno").value,
     tempo: document.getElementById("tempo").value,
