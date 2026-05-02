@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Gestão de Competências</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--coal:#1c1c2e;--amber:#f5a623;--green:#27ae60;--red:#e74c3c;--smoke:#f0f2f5;--border:#dde2ea;--text:#2c3e50;--muted:#7f8c9a}
+body{font-family:'Barlow',sans-serif;background:var(--smoke);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:48px 40px;max-width:400px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.12);border-top:6px solid var(--amber)}
+.login-logo{width:72px;height:72px;background:var(--coal);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px}
+.login-box h1{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--coal);margin-bottom:6px}
+.login-box p{font-size:14px;color:var(--muted);margin-bottom:28px}
+.login-input{width:100%;padding:13px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;margin-bottom:14px;font-family:'Barlow',sans-serif;transition:border-color .2s}
+.login-input:focus{outline:none;border-color:var(--amber)}
+.login-btn{width:100%;padding:14px;background:var(--coal);color:#fff;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;cursor:pointer;transition:background .2s}
+.login-btn:hover{background:#2e3a4e}
+.login-error{color:var(--red);font-size:13px;margin-top:8px;display:none}
+
+/* ── HEADER ── */
+#dashboard-screen{display:none}
+.site-header{background:var(--coal);padding:0;box-shadow:0 2px 20px rgba(0,0,0,.3)}
+.header-inner{max-width:1100px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.header-left{display:flex;align-items:center;gap:14px}
+.header-logo{width:44px;height:44px;background:var(--amber);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.header-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:#fff}
+.header-sub{font-size:12px;color:#8899aa}
+.btn-reload{padding:8px 16px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;font-size:13px;cursor:pointer;transition:background .2s}
+.btn-reload:hover{background:rgba(255,255,255,.2)}
+
+/* ── LAYOUT ── */
+.main{max-width:1100px;margin:0 auto;padding:28px 16px 80px}
+
+/* ── CARDS STAT ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-left:4px solid var(--amber)}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:var(--coal);line-height:1}
+.stat-label{font-size:12px;color:var(--muted);margin-top:4px;font-weight:500}
+
+/* ── SEÇÃO ── */
+.section-title-bar{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--coal);margin:28px 0 14px;display:flex;align-items:center;gap:10px}
+
+/* ── GAPS BAR CHART ── */
+.gap-card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:24px}
+.gap-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.gap-label{width:200px;font-size:13px;color:var(--text);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gap-bar-wrap{flex:1;background:#f0f2f5;border-radius:8px;height:22px;overflow:hidden}
+.gap-bar-fill{height:100%;border-radius:8px;transition:width .6s ease;display:flex;align-items:center;padding-left:8px}
+.gap-bar-fill span{font-size:11px;font-weight:700;color:#fff;white-space:nowrap}
+.gap-val{width:40px;text-align:right;font-size:14px;font-weight:700;flex-shrink:0}
+
+/* ── MATRIZ ── */
+.matrix-wrap{overflow-x:auto;margin-bottom:24px}
+.matrix-table{border-collapse:collapse;font-size:12px;min-width:700px;width:100%}
+.matrix-table th{background:var(--coal);color:#fff;padding:10px 8px;text-align:center;font-weight:600;white-space:nowrap;font-size:11px}
+.matrix-table th.name-col{text-align:left;padding-left:14px;min-width:160px}
+.matrix-table td{padding:9px 8px;border-bottom:1px solid #f0f2f5;text-align:center;font-weight:700;font-size:13px}
+.matrix-table td.name-cell{text-align:left;padding-left:14px;font-size:13px;font-weight:600;color:var(--coal)}
+.matrix-table tr:nth-child(even) td{background:#fafafa}
+.matrix-table tr.avg-row td{background:var(--amber)!important;color:var(--coal)!important;font-weight:800}
+.matrix-table tr.avg-row td.name-cell{color:var(--coal)!important}
+.score-cell{border-radius:6px;display:inline-block;min-width:36px;padding:2px 6px}
+.s1{background:#fdf0ef;color:#c0392b}
+.s2{background:#fef4e8;color:#d35400}
+.s3{background:#fefae6;color:#7d6608}
+.s4{background:#edfaf3;color:#1a5c38}
+.s5{background:#d5f5e3;color:#0e4d2a}
+
+/* ── IA ANÁLISE ── */
+.ai-card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:24px}
+.ai-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.ai-card-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--coal);display:flex;align-items:center;gap:8px}
+.btn-ai{padding:10px 22px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;gap:8px}
+.btn-ai:hover{opacity:.9}
+.btn-ai:disabled{opacity:.5;cursor:not-allowed}
+#ai-output{font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;display:none}
+#ai-output h3{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--coal);margin:16px 0 6px}
+#ai-output p{margin-bottom:10px}
+.ai-thinking{display:none;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:20px 0}
+.ai-dots span{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);animation:dot-bounce .9s infinite both;margin:0 2px}
+.ai-dots span:nth-child(2){animation-delay:.15s}
+.ai-dots span:nth-child(3){animation-delay:.3s}
+@keyframes dot-bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+
+/* ── LOADING ── */
+#loading{display:none;text-align:center;padding:60px 20px;color:var(--muted)}
+.spinner{display:inline-block;width:36px;height:36px;border:4px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#empty-state{display:none;text-align:center;padding:60px 20px;color:var(--muted)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:999;opacity:0;pointer-events:none;transition:opacity .3s}
+.toast.show{opacity:1}
+.toast.error{background:var(--red);color:#fff}
+.toast.info{background:var(--coal);color:#fff}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">📊</div>
+    <h1>Dashboard Gestor</h1>
+    <p>Matriz de Habilidades · Mecânicos Industriais</p>
+    <form onsubmit="event.preventDefault();doLogin()">
+      <input class="login-input" type="password" id="senha" placeholder="Senha de acesso">
+      <button class="login-btn" type="submit">Entrar</button>
+    </form>
+    <div class="login-error" id="login-error">Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard-screen">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="header-logo">📊</div>
+        <div>
+          <div class="header-title">Dashboard de Competências</div>
+          <div class="header-sub">Usina Sucroalcooleira · Gestão de Treinamentos</div>
+        </div>
+      </div>
+      <button class="btn-reload" onclick="loadData()">↻ Atualizar dados</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div id="loading"><div class="spinner"></div><br>Carregando avaliações...</div>
+    <div id="empty-state">
+      <div style="font-size:48px;margin-bottom:16px">📋</div>
+      <div style="font-size:18px;font-weight:600;color:var(--coal);margin-bottom:8px">Nenhuma avaliação ainda</div>
+      <div style="font-size:14px">Compartilhe o formulário com os mecânicos para começar.</div>
+    </div>
+    <div id="data-view" style="display:none">
+
+      <!-- Stats -->
+      <div class="stats-row" id="stats-row"></div>
+
+      <!-- Gaps -->
+      <div class="section-title-bar">🔍 Gaps por Categoria</div>
+      <div class="gap-card" id="gap-chart"></div>
+
+      <!-- Matriz -->
+      <div class="section-title-bar">📋 Matriz de Habilidades</div>
+      <div class="matrix-wrap"><table class="matrix-table" id="matrix-table"></table></div>
+
+      <!-- IA -->
+      <div class="section-title-bar">🤖 Análise com IA</div>
+      <div class="ai-card">
+        <div class="ai-card-header">
+          <div class="ai-card-title">Plano de Treinamento gerado pelo Claude</div>
+          <button class="btn-ai" id="btn-ai" onclick="analyzeWithAI()">
+            ✦ Gerar Análise
+          </button>
+        </div>
+        <div class="ai-thinking" id="ai-thinking">
+          <div class="ai-dots"><span></span><span></span><span></span></div>
+          Claude está analisando os dados...
+        </div>
+        <div id="ai-output"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+const SENHA_GESTOR = "clealco2025";
+const NPOINT_URL   = "https://api.npoint.io/be93e9a35f6735d40446";
+// ══════════════════════════════════════════════════════════
+
+const SECTIONS=[
+  {id:"rolamentos",title:"Rolamentos",icon:"⚙️",color:"#e67e22",size:6},
+  {id:"lubrificacao",title:"Lubrificação",icon:"🛢️",color:"#16a085",size:6},
+  {id:"alinhamento",title:"Alinhamento",icon:"📐",color:"#2980b9",size:5},
+  {id:"soldagem",title:"Soldagem",icon:"🔥",color:"#c0392b",size:5},
+  {id:"usinagem",title:"Usinagem",icon:"🔩",color:"#7d3c98",size:5},
+  {id:"metrologia",title:"Metrologia",icon:"📏",color:"#d35400",size:6},
+  {id:"seguranca",title:"Segurança",icon:"🦺",color:"#1a8a4a",size:5},
+  {id:"manutencao",title:"Manutenção",icon:"🏭",color:"#546e7a",size:6}
+];
+
+let allData=[];
+
+function doLogin(){
+  const s=document.getElementById("senha").value;
+  if(s===SENHA_GESTOR){
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("dashboard-screen").style.display="block";
+    loadData();
+  } else {
+    document.getElementById("login-error").style.display="block";
+  }
+}
+
+
+
+async function loadData(){
+  document.getElementById("loading").style.display="block";
+  document.getElementById("data-view").style.display="none";
+  document.getElementById("empty-state").style.display="none";
+
+  try{
+    const res=await fetch(NPOINT_URL+"?t="+Date.now(),{headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});
+    const data=await res.json();
+    allData=Array.isArray(data)?data:[];
+
+    document.getElementById("loading").style.display="none";
+    if(allData.length===0){
+      document.getElementById("empty-state").style.display="block";
+    } else {
+      document.getElementById("data-view").style.display="block";
+      renderDashboard(allData);
+    }
+  }catch(e){
+    console.error(e);
+    document.getElementById("loading").style.display="none";
+    showToast("Erro ao carregar dados.","error");
+  }
+}
+
+function secAvg(record, sec){
+  const vals=[];
+  for(let i=0;i<sec.size;i++){
+    const v=record.respostas[`${sec.id}_${i}`];
+    if(v!==undefined)vals.push(Number(v));
+  }
+  return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+}
+
+function overallAvg(record){
+  const vals=Object.values(record.respostas).map(Number).filter(v=>!isNaN(v));
+  return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+}
+
+function scoreClass(v){
+  if(!v)return "";
+  if(v<2)return "s1";if(v<3)return "s2";if(v<4)return "s3";if(v<4.5)return "s4";return "s5";
+}
+
+function barColor(v){
+  if(!v)return "#ddd";
+  if(v<2)return "#e74c3c";if(v<3)return "#e67e22";if(v<4)return "#f39c12";if(v<4.5)return "#27ae60";return "#1a8a4a";
+}
+
+function renderDashboard(data){
+  // Stats
+  const avgGeral=data.map(d=>overallAvg(d)).filter(Boolean);
+  const mediaEquipe=avgGeral.length?(avgGeral.reduce((a,b)=>a+b,0)/avgGeral.length).toFixed(2):0;
+  const minSec=SECTIONS.map(s=>{
+    const vals=data.map(d=>secAvg(d,s)).filter(Boolean);
+    return{title:s.title,avg:vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):0};
+  }).sort((a,b)=>a.avg-b.avg)[0];
+
+  document.getElementById("stats-row").innerHTML=`
+    <div class="stat-card"><div class="stat-val">${data.length}</div><div class="stat-label">Mecânicos avaliados</div></div>
+    <div class="stat-card" style="border-color:#27ae60"><div class="stat-val" style="color:#27ae60">${mediaEquipe}</div><div class="stat-label">Média geral da equipe</div></div>
+    <div class="stat-card" style="border-color:#e74c3c"><div class="stat-val" style="color:#e74c3c">${minSec?minSec.title.substring(0,12)+"...":"—"}</div><div class="stat-label">Maior gap da equipe</div></div>
+    <div class="stat-card" style="border-color:#2980b9"><div class="stat-val">${SECTIONS.length}</div><div class="stat-label">Categorias avaliadas</div></div>`;
+
+  // Gap chart
+  const sectionAvgs=SECTIONS.map(s=>{
+    const vals=data.map(d=>secAvg(d,s)).filter(Boolean);
+    const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+    return{...s,avg};
+  }).sort((a,b)=>a.avg-b.avg);
+
+  document.getElementById("gap-chart").innerHTML=sectionAvgs.map(s=>`
+    <div class="gap-row">
+      <div class="gap-label">${s.icon} ${s.title}</div>
+      <div class="gap-bar-wrap">
+        <div class="gap-bar-fill" style="width:${(s.avg/5)*100}%;background:${barColor(s.avg)}">
+          <span>${s.avg.toFixed(1)}</span>
+        </div>
+      </div>
+      <div class="gap-val" style="color:${barColor(s.avg)}">${s.avg.toFixed(1)}</div>
+    </div>`).join("");
+
+  // Matriz
+  const thead=`<thead><tr>
+    <th class="name-col">Mecânico</th>
+    ${SECTIONS.map(s=>`<th>${s.icon}<br>${s.title.split(" ")[0]}</th>`).join("")}
+    <th style="background:#c17f1a">Média</th>
+  </tr></thead>`;
+
+  const rows=data.map(d=>{
+    const ov=overallAvg(d);
+    return`<tr>
+      <td class="name-cell">${d.nome}</td>
+      ${SECTIONS.map(s=>{
+        const v=secAvg(d,s);
+        return`<td><span class="score-cell ${scoreClass(v)}">${v?v.toFixed(1):"—"}</span></td>`;
+      }).join("")}
+      <td><span class="score-cell ${scoreClass(ov)}">${ov?ov.toFixed(1):"—"}</span></td>
+    </tr>`;
+  }).join("");
+
+  // Linha de médias
+  const avgCols=SECTIONS.map(s=>{
+    const vals=data.map(d=>secAvg(d,s)).filter(Boolean);
+    const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):"-";
+    return`<td><span class="score-cell ${scoreClass(Number(avg))}">${avg}</span></td>`;
+  }).join("");
+  const avgGlobal=(avgGeral.reduce((a,b)=>a+b,0)/avgGeral.length).toFixed(1);
+  const avgRow=`<tr class="avg-row">
+    <td class="name-cell">MÉDIA DA EQUIPE</td>${avgCols}
+    <td><span style="font-weight:800">${avgGlobal}</span></td>
+  </tr>`;
+
+  document.getElementById("matrix-table").innerHTML=thead+`<tbody>${rows}${avgRow}</tbody>`;
+}
+
+async function analyzeWithAI(){
+  if(!allData.length){showToast("Sem dados para analisar.","error");return;}
+  document.getElementById("btn-ai").disabled=true;
+  document.getElementById("ai-thinking").style.display="flex";
+  document.getElementById("ai-output").style.display="none";
+  document.getElementById("ai-output").textContent="";
+
+  // Montar resumo dos dados para o Claude
+  const sectionAvgs=SECTIONS.map(s=>{
+    const vals=allData.map(d=>secAvg(d,s)).filter(Boolean);
+    const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
+    return`${s.title}: ${avg}/5`;
+  }).join(", ");
+
+  const mechSummary=allData.map(d=>{
+    const ov=overallAvg(d);
+    const secScores=SECTIONS.map(s=>`${s.title.split(" ")[0]}:${secAvg(d,s)?secAvg(d,s).toFixed(1):"?"}`).join(" ");
+    return`${d.nome} (${d.cargo||"Mec."}, ${d.setor||"?"}): Média ${ov?ov.toFixed(1):"?"} | ${secScores}`;
+  }).join("\n");
+
+  const prompt=`Você é um especialista em gestão de manutenção industrial e desenvolvimento de pessoas em usinas sucroalcooleiras.
+
+Analise os seguintes dados de avaliação técnica de mecânicos e gere um plano de treinamento estruturado:
+
+**MÉDIAS POR CATEGORIA (escala 1-5):**
+${sectionAvgs}
+
+**AVALIAÇÃO INDIVIDUAL (${allData.length} mecânicos):**
+${mechSummary}
+
+Com base nesses dados, forneça:
+
+1. **DIAGNÓSTICO GERAL** — análise dos principais gaps da equipe
+
+2. **PRIORIDADES DE TREINAMENTO** — top 3 categorias mais críticas com justificativa
+
+3. **PLANO DE AÇÃO** — para cada prioridade, sugira:
+   - Tipo de treinamento (interno/externo, teórico/prático)
+   - Carga horária estimada
+   - Formato recomendado (workshop, OJT, curso, etc.)
+
+4. **MECÂNICOS EM DESTAQUE** — identifique quem pode ser multiplicador interno e quem precisa de atenção especial
+
+5. **RECOMENDAÇÃO PARA A SAFRA** — ações prioritárias considerando o contexto de usina sucroalcooleira
+
+Seja direto e prático. Use linguagem adequada para gestores de manutenção industrial.`;
+
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    const result=await res.json();
+    const text=result.content[0].text;
+
+    document.getElementById("ai-thinking").style.display="none";
+    const output=document.getElementById("ai-output");
+    output.style.display="block";
+
+    // Renderizar markdown simples
+    output.innerHTML=text
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/^(\d+\.\s+\*\*[^*]+\*\*)/gm,'<h3>$1</h3>')
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/^/,'<p>').replace(/$/,'</p>');
+
+    document.getElementById("btn-ai").disabled=false;
+    document.getElementById("btn-ai").textContent="↻ Regenerar Análise";
+  }catch(e){
+    console.error(e);
+    document.getElementById("ai-thinking").style.display="none";
+    document.getElementById("btn-ai").disabled=false;
+    showToast("Erro ao chamar a IA. Tente novamente.","error");
+  }
+}
+
+function showToast(msg,type="info"){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.className=`toast ${type} show`;
+  setTimeout(()=>t.className="toast",3500);
+}
+</script>
+</body>
+</html>
