@@ -444,6 +444,106 @@ Forneça de forma prática e direta:
 }
 
 
+function showTab(name){
+  document.querySelectorAll(".tab-btn").forEach(b=>{
+    const names=["gaps","matriz","evolucao","ia"];
+    b.classList.toggle("active",names[b.getAttribute("data-tab")]===name||b.textContent.toLowerCase().includes(name.split("")[1]));
+  });
+  // toggle por id
+  ["tab-gaps","tab-matriz","tab-evolucao","tab-ia"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle("active",id==="tab-"+name);
+  });
+  document.querySelectorAll(".tab-btn").forEach((b,i)=>{
+    const tabs=["gaps","matriz","evolucao","ia"];
+    b.classList.toggle("active",tabs[i]===name);
+  });
+}
+
+function aplicarFiltro(){
+  const de=document.getElementById("filtro-de").value;
+  const ate=document.getElementById("filtro-ate").value;
+  if(!de&&!ate){limparFiltro();return;}
+  const deDate=de?new Date(de+"T00:00:00"):null;
+  const ateDate=ate?new Date(ate+"T23:59:59"):null;
+  filteredData=allData.filter(r=>{
+    if(!r.dataISO&&!r.data)return true;
+    const d=r.dataISO?new Date(r.dataISO):new Date(r.data);
+    if(deDate&&d<deDate)return false;
+    if(ateDate&&d>ateDate)return false;
+    return true;
+  });
+  const tag=document.getElementById("filter-tag");
+  const partes=[];
+  if(de)partes.push("de "+new Date(de+"T12:00:00").toLocaleDateString("pt-BR"));
+  if(ate)partes.push("até "+new Date(ate+"T12:00:00").toLocaleDateString("pt-BR"));
+  if(tag){tag.textContent=filteredData.length+" registros — "+partes.join(" ");tag.style.display="inline-block";}
+  renderDashboard(filteredData);
+  renderEvolucao(allData);
+}
+
+function limparFiltro(){
+  document.getElementById("filtro-de").value="";
+  document.getElementById("filtro-ate").value="";
+  const tag=document.getElementById("filter-tag");
+  if(tag)tag.style.display="none";
+  filteredData=[...allData];
+  renderDashboard(filteredData);
+  renderEvolucao(allData);
+}
+
+function renderEvolucao(data){
+  const container=document.getElementById("evolucao-container");
+  if(!container)return;
+  const porNome={};
+  data.forEach(r=>{if(!porNome[r.nome])porNome[r.nome]=[];porNome[r.nome].push(r);});
+  const nomes=Object.keys(porNome).sort();
+  if(!nomes.length){container.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Nenhum dado disponível.</div>';return;}
+
+  container.innerHTML=nomes.map(nome=>{
+    const regs=porNome[nome].sort((a,b)=>new Date(a.dataISO||a.id)-new Date(b.dataISO||b.id));
+    const ov0=overallAvg(regs[0]);
+    const ovN=overallAvg(regs[regs.length-1]);
+    const evolucao=regs.length>1&&ov0!==null&&ovN!==null?ovN-ov0:null;
+
+    const evoBadge=evolucao===null?"":`<span style="background:${evolucao>0.05?"#d5f5e3":evolucao<-0.05?"#fad7d7":"#f0f2f5"};border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:${evolucao>0.05?"#0e4d2a":evolucao<-0.05?"#791F1F":"#7f8c9a"}">${evolucao>0.05?"▲":evolucao<-0.05?"▼":"≈"} ${Math.abs(evolucao).toFixed(2)}</span>`;
+
+    if(regs.length===1){
+      return`<div class="evol-card">
+        <div class="evol-name">👷 ${nome} <span style="font-size:13px;font-weight:400;color:var(--muted)">${regs[0].dataCurta||""} · ${regs[0].semana||"—"} · Média: <strong>${overallAvg(regs[0])?.toFixed(2)||"—"}</strong></span></div>
+        <div style="font-size:13px;color:var(--muted)">${regs[0].totalRespondidas||Object.keys(regs[0].respostas||{}).length}/${regs[0].totalPerguntas||81} perguntas respondidas</div>
+      </div>`;
+    }
+
+    const thead=`<thead><tr>
+      <th class="left">Data</th><th class="left">Semestre</th>
+      ${SECTIONS.map(s=>`<th>${s.icon}</th>`).join("")}
+      <th>Geral</th><th>Δ</th>
+    </tr></thead>`;
+
+    let prevOv=null;
+    const rows=regs.map((r,i)=>{
+      const ov=overallAvg(r);
+      const delta=prevOv!==null&&ov!==null?ov-prevOv:null;
+      const deltaHtml=delta===null?"":delta>0.05?`<span class="delta-pos">▲${delta.toFixed(2)}</span>`:delta<-0.05?`<span class="delta-neg">▼${Math.abs(delta).toFixed(2)}</span>`:`<span class="delta-eq">≈</span>`;
+      prevOv=ov;
+      const c=scoreClass(ov);
+      return`<tr${i===regs.length-1?' style="font-weight:700;background:#fffbe6"':""}>
+        <td class="left">${r.dataCurta||r.data?.split(",")[0]||"—"}</td>
+        <td class="left" style="font-size:11px;color:var(--muted)">${r.semana||"—"}</td>
+        ${SECTIONS.map(s=>{const v=secAvg(r,s);return`<td><span class="score-cell ${v?scoreClass(v):""}">${v?v.toFixed(1):"—"}</span></td>`;}).join("")}
+        <td><span class="score-cell ${c}">${ov?ov.toFixed(2):"—"}</span></td>
+        <td>${deltaHtml}</td>
+      </tr>`;
+    }).join("");
+
+    return`<div class="evol-card">
+      <div class="evol-name">👷 ${nome} <span style="font-size:13px;font-weight:400;color:var(--muted)">${regs.length} avaliações</span> ${evoBadge}</div>
+      <div style="overflow-x:auto"><table class="evol-table"><thead>${thead}</thead><tbody>${rows}</tbody></table></div>
+    </div>`;
+  }).join("");
+}
+
 function showToast(msg,type="info"){
   const t=document.getElementById("toast");
   t.textContent=msg;t.className=`toast ${type} show`;
