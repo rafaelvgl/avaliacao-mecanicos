@@ -189,22 +189,19 @@ const SECTIONS=[
     "Distingue os tipos de desalinhamento: angular, paralelo (radial) e axial.",
     "Realiza alinhamento com relógio comparador pelo método rim-face ou reverso.",
     "Calcula os calços corretivos a partir das leituras de desalinhamento.",
-    "Compreende e corrige o pé manco antes de iniciar o alinhamento.",
+    "Compreende e corrige o softfoot antes de iniciar o alinhamento.",
     "Opera sistema de alinhamento a laser (Pruftechnik, SKF TKSA ou similar)."
   ]},
   {id:"soldagem",title:"Soldagem",icon:"🔥",color:"#c0392b",questions:[
     "Conhece e diferencia MIG/MAG (GMAW), TIG (GTAW) e Eletrodo Revestido (SMAW).",
     "Seleciona consumíveis conforme material base (carbono, inox, ferro fundido).",
-    "Tem prática em soldagem de manutenção: recuperação de eixos, tampões, reforços.",
-    "Ajusta parâmetros: amperagem, tensão, velocidade, polaridade, gás de proteção.",
     "Conhece cuidados com deformação térmica e pré/pós-aquecimento."
   ]},
-  {id:"usinagem",title:"Usinagem",icon:"🔩",color:"#7d3c98",questions:[
-    "Opera torno mecânico: cilindrar, facejar, sangrar, roscar.",
-    "Conhece fresamento, retífica cilíndrica/plana e mandrilamento.",
-    "Interpreta tolerâncias dimensionais e ajustes ISO (H7/k6, H7/p6).",
-    "Lê desenhos mecânicos com cotas, tolerâncias geométricas e acabamentos.",
-    "Diferencia materiais comuns na usina (SAE 1020/1045, inox 304/316, ferro fundido)."
+  {id:"selagem",title:"Selagem de Bombas",icon:"💧",color:"#1565c0",questions:[
+    "Conhece o princípio de funcionamento de selos mecânicos de mola única: componentes (faces, mola, elastômeros), sentido de montagem e critérios de seleção.",
+    "Conhece o princípio de funcionamento de selos mecânicos de multi-molas: diferenças construtivas em relação à mola única, vantagens e aplicações típicas na usina.",
+    "Sabe instalar e substituir gaxetas de vedação (fibra, PTFE, grafite): corte em ângulo correto, número de anéis, pré-carga no prensa-gaxeta e ajuste em operação.",
+    "Conhece os critérios de diagnóstico de falha em gaxetas: gotejamento aceitável, sinais de superaquecimento, ranhuras no eixo e quando substituir."
   ]},
   {id:"metrologia",title:"Ferramentas e Metrologia",icon:"📏",color:"#d35400",questions:[
     "Usa paquímetro analógico e digital: leitura na escala, zeramento, verificação.",
@@ -228,6 +225,62 @@ const SECTIONS=[
     "Domina transmissões mecânicas: correntes, correias, acoplamentos, redutores.",
     "Preenche ordens de serviço e registros de manutenção com qualidade.",
     "Conhece equipamentos da usina: moendas, centrífugas, tachos, evaporadores, bombas."
+  ]},
+  {id:"preditiva",title:"Manutenção Preditiva",icon:"📡",color:"#6a1b9a",questions:[
+    "Compreende os princípios da manutenção preditiva por análise de vibrações mecânicas: grandezas medidas (aceleração, velocidade, deslocamento), faixas de frequência e unidades (mm/s, g, mm).",
+    "Conhece os principais defeitos detectáveis por vibrações: desbalanceamento, desalinhamento, folgas mecânicas, defeitos em rolamentos (BPFI, BPFO, BSF, FTF) e problemas em engrenagens.",
+    "Opera o coletor de dados offline de vibrações da Teknikao: configuração de rotas, coleta de espectros e formas de onda, download e envio de dados para o software de análise.",
+    "Interpreta espectros de vibração básicos: identifica picos dominantes, harmônicos e bandas de frequência relacionados a falhas incipientes em equipamentos rotativos.",
+    "Conhece outros métodos preditivos aplicados na usina: análise de óleo (viscosidade, contaminação, partículas de desgaste), termografia infravermelha e ultrassom."
+  ]},
+  {id:"redutores",title:"Redutores de Velocidade",icon:"🔧",color:"#37474f",questions:[
+    "Identifica os tipos construtivos de redutores (paralelo, helicoidal, cônico-helicoidal, ciclodal) e suas aplicações típicas na usina sucroalcooleira.",
+    "Realiza inspeção e substituição do óleo lubrificante de redutores: verificação do nível, análise visual do óleo, periodicidade de troca e especificação de viscosidade conforme fabricante.",
+    "Conhece os procedimentos de montagem e desmontagem de redutores: folga entre dentes, pré-carga de rolamentos de apoio, vedações e acoplamentos.",
+    "Diagnostica falhas em redutores: ruído excessivo, vazamento de óleo, aquecimento anormal, vibração e folga excessiva nos dentados.",
+    "Sabe realizar o alinhamento e fixação correta de redutores acoplados a motores e equipamentos, considerando dilatação térmica e variação de carga."
+  ]},
+  {id:"bombas",title:"Bombas Centrífugas",icon:"💦",color:"#0277bd",questions:[
+    "Conhece os componentes internos de uma bomba centrífuga: impulsor, voluta, eixo, gaxetas/selos, mancais e bocais de sucção e recalque.",
+    "Interpreta a curva característica de uma bomba (H×Q) e o ponto de operação; compreende o conceito de NPSH e as causas e consequências da cavitação.",
+    "Realiza desmontagem, inspeção e montagem de bombas centrífugas: folga entre impulsor e carcaça, substituição de selos e gaxetas, centragem do eixo.",
+    "Diagnostica falhas em bombas: cavitação, desgaste de impulsor, folga excessiva, vibração, superaquecimento e variação de vazão ou pressão.",
+    "Conhece os procedimentos de partida e parada corretos de bombas centrífugas, incluindo recirculação mínima e prevenção de golpe de aríete."
+  ]},
+  {id:"turbinas",title:"Turbinas a Vapor",icon:"♨️",color:"#b71c1c",questions:[
+    "Conhece os componentes principais de uma turbina a vapor de contrapressão: carcaça, rotor, bocais, diafragmas, selos de labiriinto, mancais e governor.",
+    "Compreende os procedimentos de partida e parada de turbinas a vapor: aquecimento gradual, purga de condensado, controle de velocidade e equalização de pressões.",
+    "Realiza inspeção e manutenção de turbinas a vapor: verificação da folga radial e axial, condição das pás, estado dos selos de labirinto e mancais.",
+    "Diagnostica falhas em turbinas: vibração excessiva, golpe d'água (water hammer), desbalanceamento do rotor, superaquecimento de mancais e perda de rendimento.",
+    "Conhece os sistemas auxiliares da turbina: regulador de velocidade (governor), válvula de trip, sistema de óleo de mancais e vedações."
+  ]},
+  {id:"centrifugas_levedo",title:"Centrífugas de Levedo",icon:"🧪",color:"#558b2f",questions:[
+    "Conhece os componentes e o princípio de operação das centrífugas de levedo (decantação contínua por força centrífuga): tambor, parafuso transportador, carcaça e rolamentos principais.",
+    "Realiza inspeção periódica de centrífugas de levedo: verificação do desgaste do parafuso transportador (pás e hub), folga diferencial e condição dos rolamentos de apoio e de empuxo.",
+    "Conhece os procedimentos de desmontagem e remontagem do tambor e do parafuso transportador: torques de aperto, ajuste da folga diferencial e balanceamento.",
+    "Diagnostica falhas em centrífugas de levedo: vibração excessiva, ruído anormal, variação na eficiência de separação, vazamentos e superaquecimento de mancais.",
+    "Conhece os procedimentos de limpeza CIP (clean-in-place) e os cuidados para proteção das superfícies internas e componentes durante a manutenção."
+  ]},
+  {id:"centrifugas_acucar",title:"Centrífugas de Açúcar",icon:"🍬",color:"#f9a825",questions:[
+    "Diferencia os tipos de centrífugas de açúcar: contínuas (para açúcar de segunda e melaço) e descontínuas (batelada, para açúcar de primeira qualidade); conhece os componentes de cada tipo.",
+    "Conhece os componentes críticos das centrífugas descontínuas (batelada): cesto, tela filtrante, freio, sistema hidráulico de pás raspadores e mancal principal.",
+    "Conhece os componentes críticos das centrífugas contínuas: rotor cônico, telas de aço inox, sistema de alimentação e descarga, mancais e acoplamento.",
+    "Realiza inspeção e substituição de telas filtrantes: critérios de desgaste, torque de fixação, limpeza das ranhuras e alinhamento do cesto.",
+    "Diagnostica falhas em centrífugas de açúcar: vibração por desbalanceamento ou desgaste de telas, ruído nos mancais, vazamento de óleo e falhas no sistema hidráulico de pás."
+  ]},
+  {id:"transportadores",title:"Transportadores de Taliscas e Correias",icon:"📦",color:"#4e342e",questions:[
+    "Conhece os componentes dos transportadores de taliscas: correntes, taliscas, eixos motrizes e tensores, mancais, redutores e sistemas de tensionamento.",
+    "Conhece os componentes das correias transportadoras de borracha: correia, tambores (motriz, tensor e intermediários), roletes (superior e inferior), raspadores e sistema de emenda.",
+    "Realiza inspeção periódica em transportadores: desgaste de taliscas e correntes, alinhamento de correia, tensão adequada, condição de roletes e raspadores.",
+    "Diagnostica falhas em transportadores: deslizamento e desalinhamento de correia, desgaste excessivo de taliscas, quebra de correntes, ruído em roletes e superaquecimento de mancais.",
+    "Conhece os procedimentos de emenda a frio e a quente de correias de borracha, além dos critérios para descarte e substituição da correia."
+  ]},
+  {id:"ventiladores",title:"Ventiladores e Exaustores",icon:"🌀",color:"#00838f",questions:[
+    "Conhece os tipos de ventiladores industriais (centrífugos e axiais) e exaustores aplicados na usina: caldeiras, difusores, torres de resfriamento e exaustores de bagaço.",
+    "Realiza inspeção de ventiladores e exaustores: condição das pás (desgaste, erosão, incrustação), folga entre pá e carcaça, condição de mancais e acoplamentos.",
+    "Conhece os procedimentos de balanceamento dinâmico in-situ de rotores de ventiladores: medição de vibração, adição de massas de correção e critérios de aceitação (ISO 1940).",
+    "Diagnostica falhas em ventiladores: vibração por desbalanceamento ou erosão de pás, superaquecimento de mancais, ruído aerodinâmico e queda de pressão estática.",
+    "Conhece os procedimentos de desmontagem e montagem de ventiladores de tração forçada e induzida em caldeiras, incluindo cuidados com vedações e ajuste de folgas."
   ]}
 ];
 
