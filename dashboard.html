@@ -174,9 +174,8 @@ body{font-family:'Barlow',sans-serif;background:var(--smoke);color:var(--text);m
 
 <script>
 // ══════════════════════════════════════════════════════════
-const SENHA_GESTOR  = "clealco2025";
-const JSONBIN_KEY   = "$2a$10$v4WcIzW3Y1Bl8YpTto5Le.XCUP/Ktkg0Uxe1DN.ofyFQN1QMFRKnK";
-const JSONBIN_BASE  = "https://api.jsonbin.io/v3/b";
+const SENHA_GESTOR = "clealco2025";
+const NPOINT_URL   = "https://api.npoint.io/be93e9a35f6735d40446";
 // ══════════════════════════════════════════════════════════
 
 const SECTIONS=[
@@ -203,10 +202,7 @@ function doLogin(){
   }
 }
 
-async function getBinId(){
-  let binId=localStorage.getItem("mecanicos_bin_id");
-  return binId;
-}
+
 
 async function loadData(){
   document.getElementById("loading").style.display="block";
@@ -214,18 +210,9 @@ async function loadData(){
   document.getElementById("empty-state").style.display="none";
 
   try{
-    const binId=await getBinId();
-    if(!binId){
-      document.getElementById("loading").style.display="none";
-      document.getElementById("empty-state").style.display="block";
-      return;
-    }
-
-    const res=await fetch(`${JSONBIN_BASE}/${binId}/latest`,{
-      headers:{"X-Master-Key":JSONBIN_KEY}
-    });
+    const res=await fetch(NPOINT_URL);
     const data=await res.json();
-    allData=Array.isArray(data.record)?data.record:[];
+    allData=Array.isArray(data)?data:[];
 
     document.getElementById("loading").style.display="none";
     if(allData.length===0){
