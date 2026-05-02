@@ -405,18 +405,30 @@ Deseja enviar mesmo assim?`))return;
   };
 
   try{
-    // Ler dados atuais — cache-busting para garantir versão mais recente
-    const getRes=await fetch(NPOINT_URL+"?t="+Date.now(),{
+    // Função de fetch com retry automático em caso de 429 (rate limit)
+    async function fetchComRetry(url, opts={}, tentativas=3){
+      for(let i=0;i<tentativas;i++){
+        const res = await fetch(url, opts);
+        if(res.status===429){
+          // Aguarda 2s antes de tentar novamente
+          await new Promise(r=>setTimeout(r,2000*(i+1)));
+          continue;
+        }
+        return res;
+      }
+      throw new Error("Muitas tentativas. Tente novamente em alguns segundos.");
+    }
+
+    // Leitura única dos dados atuais
+    const getRes = await fetchComRetry(NPOINT_URL+"?t="+Date.now(),{
       headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}
     });
-    const current=await getRes.json();
-    const list=Array.isArray(current)?current:[];
+    const current = await getRes.json();
+    const list = Array.isArray(current)?current:[];
 
-    // REGRA: manter histórico completo para evolução
-    // Exceção: na mesma semana ISO, manter apenas o PRIMEIRO envio (não sobrescrever)
-    const jaEnviouEstaSemana = list.some(r=>r.nome===nome && r.semana===semanaISO);
-    if(jaEnviouEstaSemana){
-      // Avisar e não salvar duplicata da mesma semana
+    // REGRA: na mesma semana, manter apenas o PRIMEIRO envio (não sobrescrever)
+    const jaEnviouEsteSemestre = list.some(r=>r.nome===nome && r.semana===semanaISO);
+    if(jaEnviouEsteSemestre){
       document.getElementById("form-container").style.display="none";
       document.getElementById("success-screen").style.display="block";
       window.scrollTo(0,0);
@@ -431,47 +443,16 @@ Deseja enviar mesmo assim?`))return;
       label.textContent="Enviar Avaliação";
       return;
     }
-    // Adicionar novo registro mantendo histórico
+
+    // Adicionar novo registro mantendo histórico completo
     const filtered=[...list, payload];
 
-    // Pequeno delay para evitar condição de corrida entre envios simultâneos
-    await new Promise(r=>setTimeout(r,500+Math.random()*1000));
-
-    // Segunda leitura para evitar condição de corrida
-    const getRes2=await fetch(NPOINT_URL+"?t="+Date.now(),{
-      headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}
-    });
-    const current2=await getRes2.json();
-    const list2=Array.isArray(current2)?current2:[];
-    // Recheck: mesma semana?
-    const jaEnviou2=list2.some(r=>r.nome===nome && r.semana===semanaISO);
-    if(jaEnviou2){
-      document.getElementById("form-container").style.display="none";
-      document.getElementById("success-screen").style.display="block";
-      window.scrollTo(0,0);
-      document.getElementById("success-name").textContent="⚠️ "+nome;
-      document.getElementById("success-summary").innerHTML=
-        `<div style="text-align:center;padding:20px;color:#e67e22;font-size:15px;font-weight:600">
-          Você já respondeu esta avaliação neste semestre.<br>
-          <span style="font-size:13px;font-weight:400;color:#888">Seu primeiro envio deste semestre foi preservado.</span>
-        </div>`;
-      btn.disabled=false;
-      label.textContent="Enviar Avaliação";
-      return;
-    }
-    const filtered2=[...list2, payload];
-
-    // Salvar versão final
-    await fetch(NPOINT_URL,{
+    // Salvar com retry
+    await fetchComRetry(NPOINT_URL,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(filtered2)
-    });
-
-    document.getElementById("form-container").style.display="none";
-    document.getElementById("success-screen").style.display="block";
-    window.scrollTo(0,0);
-    showSuccessDetails(nome);
+      body:JSON.stringify(filtered)
+    })
   }catch(e){
     console.error(e);
     showToast("Erro ao enviar. Verifique sua conexão.","error");
