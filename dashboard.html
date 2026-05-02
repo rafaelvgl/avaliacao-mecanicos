@@ -130,7 +130,7 @@ body{font-family:'Barlow',sans-serif;background:var(--smoke);color:var(--text);m
     <h1>Dashboard Gestor</h1>
     <p>Matriz de Habilidades · Mecânicos Industriais</p>
     <form onsubmit="event.preventDefault();doLogin()">
-      <input class="login-input" type="password" id="senha" placeholder="Senha de acesso">
+      <input class="login-input" type="password" id="senha" placeholder="Senha de acesso" autocomplete="current-password">
       <button class="login-btn" type="submit">Entrar</button>
     </form>
     <div class="login-error" id="login-error">Senha incorreta. Tente novamente.</div>
@@ -201,12 +201,12 @@ body{font-family:'Barlow',sans-serif;background:var(--smoke);color:var(--text);m
         <div class="ai-card-header">
           <div class="ai-card-title">Plano de Treinamento gerado pelo Claude</div>
           <button class="btn-ai" id="btn-ai" onclick="analyzeWithAI()">
-            ✦ Gerar Análise
+            ✦ Analisar no Claude
           </button>
         </div>
-        <div class="ai-thinking" id="ai-thinking">
+        <div class="ai-thinking" id="ai-thinking" style="display:none">
           <div class="ai-dots"><span></span><span></span><span></span></div>
-          Claude está analisando os dados...
+          Abrindo Claude...
         </div>
         <div id="ai-output"></div>
       </div>
@@ -225,14 +225,22 @@ const NPOINT_URL   = "https://api.npoint.io/be93e9a35f6735d40446";
 // ══════════════════════════════════════════════════════════
 
 const SECTIONS=[
-  {id:"rolamentos",title:"Rolamentos",icon:"⚙️",color:"#e67e22",size:6},
-  {id:"lubrificacao",title:"Lubrificação",icon:"🛢️",color:"#16a085",size:6},
-  {id:"alinhamento",title:"Alinhamento",icon:"📐",color:"#2980b9",size:5},
-  {id:"soldagem",title:"Soldagem",icon:"🔥",color:"#c0392b",size:5},
-  {id:"usinagem",title:"Usinagem",icon:"🔩",color:"#7d3c98",size:5},
-  {id:"metrologia",title:"Metrologia",icon:"📏",color:"#d35400",size:6},
-  {id:"seguranca",title:"Segurança",icon:"🦺",color:"#1a8a4a",size:5},
-  {id:"manutencao",title:"Manutenção",icon:"🏭",color:"#546e7a",size:6}
+  {id:"rolamentos",        title:"Rolamentos",              icon:"⚙️",  color:"#e67e22", size:6},
+  {id:"lubrificacao",      title:"Lubrificação",            icon:"🛢️", color:"#16a085", size:6},
+  {id:"alinhamento",       title:"Alinhamento",             icon:"📐",  color:"#2980b9", size:5},
+  {id:"soldagem",          title:"Soldagem",                icon:"🔥",  color:"#c0392b", size:3},
+  {id:"selagem",           title:"Selagem de Bombas",       icon:"💧",  color:"#1565c0", size:4},
+  {id:"metrologia",        title:"Metrologia",              icon:"📏",  color:"#d35400", size:6},
+  {id:"seguranca",         title:"Segurança",               icon:"🦺",  color:"#1a8a4a", size:5},
+  {id:"manutencao",        title:"Manutenção Industrial",   icon:"🏭",  color:"#546e7a", size:6},
+  {id:"preditiva",         title:"Manutenção Preditiva",    icon:"📡",  color:"#6a1b9a", size:5},
+  {id:"redutores",         title:"Redutores de Velocidade", icon:"🔧",  color:"#37474f", size:5},
+  {id:"bombas",            title:"Bombas Centrífugas",      icon:"💦",  color:"#0277bd", size:5},
+  {id:"turbinas",          title:"Turbinas a Vapor",        icon:"♨️",  color:"#b71c1c", size:5},
+  {id:"centrifugas_levedo",title:"Centrífugas de Levedo",   icon:"🧪",  color:"#558b2f", size:5},
+  {id:"centrifugas_acucar",title:"Centrífugas de Açúcar",   icon:"🍬",  color:"#f9a825", size:5},
+  {id:"transportadores",   title:"Transportadores",         icon:"📦",  color:"#4e342e", size:5},
+  {id:"ventiladores",      title:"Ventiladores/Exaustores", icon:"🌀",  color:"#00838f", size:5},
 ];
 
 let allData=[];       // todos os registros do npoint (histórico completo)
@@ -376,202 +384,65 @@ function renderDashboard(data){
   document.getElementById("matrix-table").innerHTML=thead+`<tbody>${rows}${avgRow}</tbody>`;
 }
 
-async function analyzeWithAI(){
-  if(!allData.length){showToast("Sem dados para analisar.","error");return;}
-  document.getElementById("btn-ai").disabled=true;
-  document.getElementById("ai-thinking").style.display="flex";
-  document.getElementById("ai-output").style.display="none";
-  document.getElementById("ai-output").textContent="";
+function analyzeWithAI(){
+  if(!filteredData.length){showToast("Sem dados para analisar.","error");return;}
 
-  // Montar resumo dos dados para o Claude
+  // Montar resumo dos dados
   const sectionAvgs=SECTIONS.map(s=>{
-    const vals=allData.map(d=>secAvg(d,s)).filter(Boolean);
-    const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):0;
+    const vals=filteredData.map(d=>secAvg(d,s)).filter(v=>v!==null);
+    const avg=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):"sem dados";
     return`${s.title}: ${avg}/5`;
-  }).join(", ");
-
-  const mechSummary=allData.map(d=>{
-    const ov=overallAvg(d);
-    const secScores=SECTIONS.map(s=>`${s.title.split(" ")[0]}:${secAvg(d,s)?secAvg(d,s).toFixed(1):"?"}`).join(" ");
-    return`${d.nome} (${d.cargo||"Mec."}, ${d.setor||"?"}): Média ${ov?ov.toFixed(1):"?"} | ${secScores}`;
   }).join("\n");
 
-  const prompt=`Você é um especialista em gestão de manutenção industrial e desenvolvimento de pessoas em usinas sucroalcooleiras.
+  const mechSummary=filteredData.map(d=>{
+    const ov=overallAvg(d);
+    const scores=SECTIONS.map(s=>`${s.title.split(" ")[0]}:${secAvg(d,s)?secAvg(d,s).toFixed(1):"?"}`).join(" ");
+    return`${d.nome} (${d.cargo||"Mec."}, ${d.setor||"?"}, ${d.semana||""}): Média ${ov?ov.toFixed(2):"?"} | ${scores}`;
+  }).join("\n");
 
-Analise os seguintes dados de avaliação técnica de mecânicos e gere um plano de treinamento estruturado:
+  const prompt=`Você é especialista em gestão de manutenção industrial e desenvolvimento de pessoas em usinas sucroalcooleiras.
 
-**MÉDIAS POR CATEGORIA (escala 1-5):**
+Analise os dados de avaliação técnica de mecânicos (escala 1-5) — 16 categorias avaliadas: rolamentos, lubrificação, alinhamento de eixos, soldagem, selagem de bombas (selos mecânicos e gaxetas), metrologia, segurança, manutenção industrial, manutenção preditiva (vibrações/Teknikao), redutores de velocidade, bombas centrífugas, turbinas a vapor, centrífugas de levedo, centrífugas de açúcar, transportadores e ventiladores/exaustores.
+
+MÉDIAS POR CATEGORIA (1=Não conhece, 5=Especialista):
 ${sectionAvgs}
 
-**AVALIAÇÃO INDIVIDUAL (${allData.length} mecânicos):**
+AVALIAÇÃO INDIVIDUAL (${filteredData.length} mecânicos):
 ${mechSummary}
 
-Com base nesses dados, forneça:
+Forneça de forma prática e direta:
+1. DIAGNÓSTICO GERAL — principais gaps da equipe no contexto sucroalcooleiro
+2. TOP 3 PRIORIDADES DE TREINAMENTO — com urgência, justificativa e impacto na safra
+3. PLANO DE AÇÃO — para cada prioridade: tipo de treinamento, carga horária e formato
+4. DESTAQUES — quem pode ser multiplicador interno e quem precisa de atenção especial
+5. RECOMENDAÇÃO SAFRA — ações urgentes antes do início da próxima safra`;
 
-1. **DIAGNÓSTICO GERAL** — análise dos principais gaps da equipe
+  // Abrir claude.ai com o prompt pronto
+  const url="https://claude.ai/new?q="+encodeURIComponent(prompt);
+  window.open(url,"_blank");
 
-2. **PRIORIDADES DE TREINAMENTO** — top 3 categorias mais críticas com justificativa
-
-3. **PLANO DE AÇÃO** — para cada prioridade, sugira:
-   - Tipo de treinamento (interno/externo, teórico/prático)
-   - Carga horária estimada
-   - Formato recomendado (workshop, OJT, curso, etc.)
-
-4. **MECÂNICOS EM DESTAQUE** — identifique quem pode ser multiplicador interno e quem precisa de atenção especial
-
-5. **RECOMENDAÇÃO PARA A SAFRA** — ações prioritárias considerando o contexto de usina sucroalcooleira
-
-Seja direto e prático. Use linguagem adequada para gestores de manutenção industrial.`;
-
-  try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        messages:[{role:"user",content:prompt}]
-      })
-    });
-    const result=await res.json();
-    const text=result.content[0].text;
-
-    document.getElementById("ai-thinking").style.display="none";
-    const output=document.getElementById("ai-output");
-    output.style.display="block";
-
-    // Renderizar markdown simples
-    output.innerHTML=text
-      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-      .replace(/^(\d+\.\s+\*\*[^*]+\*\*)/gm,'<h3>$1</h3>')
-      .replace(/\n\n/g,'</p><p>')
-      .replace(/^/,'<p>').replace(/$/,'</p>');
-
-    document.getElementById("btn-ai").disabled=false;
-    document.getElementById("btn-ai").textContent="↻ Regenerar Análise";
-  }catch(e){
-    console.error(e);
-    document.getElementById("ai-thinking").style.display="none";
-    document.getElementById("btn-ai").disabled=false;
-    showToast("Erro ao chamar a IA. Tente novamente.","error");
-  }
-}
-
-function showTab(name){
-  document.querySelectorAll(".tab-btn").forEach((b,i)=>{
-    const names=["gaps","matriz","evolucao","ia"];
-    b.classList.toggle("active", names[i]===name);
-  });
-  document.querySelectorAll(".tab-content").forEach(t=>{
-    t.classList.toggle("active", t.id==="tab-"+name);
-  });
-}
-
-function aplicarFiltro(){
-  const de=document.getElementById("filtro-de").value;
-  const ate=document.getElementById("filtro-ate").value;
-  if(!de&&!ate){limparFiltro();return;}
-
-  const deDate=de?new Date(de+"T00:00:00"):null;
-  const ateDate=ate?new Date(ate+"T23:59:59"):null;
-
-  filteredData=allData.filter(r=>{
-    if(!r.dataISO)return true;
-    const d=new Date(r.dataISO);
-    if(deDate&&d<deDate)return false;
-    if(ateDate&&d>ateDate)return false;
-    return true;
-  });
-
-  const tag=document.getElementById("filter-tag");
-  const partes=[];
-  if(de)partes.push("de "+new Date(de+"T12:00:00").toLocaleDateString("pt-BR"));
-  if(ate)partes.push("até "+new Date(ate+"T12:00:00").toLocaleDateString("pt-BR"));
-  tag.textContent=filteredData.length+" registros — "+partes.join(" ");
-  tag.style.display="inline-block";
-
-  renderDashboard(filteredData);
-  renderEvolucao(allData); // evolução sempre usa histórico completo
-}
-
-function limparFiltro(){
-  document.getElementById("filtro-de").value="";
-  document.getElementById("filtro-ate").value="";
-  document.getElementById("filter-tag").style.display="none";
-  filteredData=[...allData];
-  renderDashboard(filteredData);
-  renderEvolucao(allData);
-}
-
-function renderEvolucao(data){
-  const container=document.getElementById("evolucao-container");
-  if(!container)return;
-
-  // Agrupar por nome e ordenar por data
-  const porNome={};
-  data.forEach(r=>{
-    if(!porNome[r.nome])porNome[r.nome]=[];
-    porNome[r.nome].push(r);
-  });
-
-  const nomes=Object.keys(porNome).sort();
-  if(nomes.length===0){
-    container.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">Nenhum dado disponível.</div>';
-    return;
-  }
-
-  container.innerHTML=nomes.map(nome=>{
-    const registros=porNome[nome].sort((a,b)=>new Date(a.dataISO||0)-new Date(b.dataISO||0));
-    if(registros.length===1){
-      // Só um registro — mostrar card simples
-      const r=registros[0];
-      const ov=overallAvg(r);
-      return`<div class="evol-card">
-        <div class="evol-name">👷 ${nome}
-          <span style="font-size:13px;font-weight:400;color:var(--muted)">${r.dataCurta||r.data||"—"} · Único registro</span>
-        </div>
-        <div style="font-size:13px;color:var(--muted)">Média geral: <strong style="color:var(--coal)">${ov?ov.toFixed(2):"—"}</strong> · ${r.totalRespondidas||Object.keys(r.respostas).length}/${r.totalPerguntas||44} perguntas respondidas</div>
-      </div>`;
-    }
-
-    // Múltiplos registros — tabela de evolução
-    const secCols=SECTIONS.map(s=>s.title.split(" ")[0]);
-    const thead=`<thead><tr>
-      <th class="left">Data</th>
-      <th class="left">Semestre</th>
-      ${SECTIONS.map(s=>`<th>${s.icon}</th>`).join("")}
-      <th>Geral</th>
-      <th>Δ</th>
-    </tr></thead>`;
-
-    let prevOv=null;
-    const rows=registros.map((r,i)=>{
-      const ov=overallAvg(r);
-      const delta=prevOv!==null&&ov!==null?(ov-prevOv):null;
-      const deltaHtml=delta===null?"":delta>0.05?`<span class="delta-pos">▲${delta.toFixed(2)}</span>`:delta<-0.05?`<span class="delta-neg">▼${Math.abs(delta).toFixed(2)}</span>`:`<span class="delta-eq">≈</span>`;
-      prevOv=ov;
-      return`<tr${i===registros.length-1?' style="font-weight:700"':""}>
-        <td class="left">${r.dataCurta||r.data?.split(",")[0]||"—"}</td>
-        <td class="left" style="font-size:11px;color:var(--muted)">${r.semana||"—"}</td>
-        ${SECTIONS.map(s=>{
-          const v=secAvg(r,s);
-          return`<td><span class="score-cell ${v?scoreClass(v):""}">${v?v.toFixed(1):"—"}</span></td>`;
-        }).join("")}
-        <td><span class="score-cell ${ov?scoreClass(ov):""}">${ov?ov.toFixed(2):"—"}</span></td>
-        <td>${deltaHtml}</td>
-      </tr>`;
-    }).join("");
-
-    return`<div class="evol-card">
-      <div class="evol-name">👷 ${nome}
-        <span style="font-size:13px;font-weight:400;color:var(--muted)">${registros.length} avaliações</span>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="evol-table"><thead>${thead}</thead><tbody>${rows}</tbody></table>
-      </div>
+  // Mostrar instruções no painel
+  const output=document.getElementById("ai-output");
+  output.style.display="block";
+  output.innerHTML=`
+    <div style="background:#edfaf3;border-left:4px solid #27ae60;border-radius:0;padding:16px;font-size:14px;color:#145a32">
+      <strong>✓ Prompt enviado para o Claude!</strong><br><br>
+      Uma nova aba foi aberta com o <strong>claude.ai</strong> e o prompt já preenchido com os dados da equipe.<br><br>
+      <span style="font-size:13px;color:#1a5c38">Se a aba não abriu, verifique se o navegador bloqueou o popup — clique em <strong>"Permitir"</strong> na barra de endereço.</span>
+    </div>
+    <div style="margin-top:14px;background:#f8f9fa;border-radius:8px;padding:14px">
+      <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">📋 Prompt gerado (para copiar manualmente se necessário):</div>
+      <textarea id="prompt-textarea" style="width:100%;height:160px;font-size:11px;padding:8px;border-radius:6px;border:1px solid #ddd;resize:vertical;font-family:monospace" readonly>${prompt.replace(/`/g,"'")}</textarea>
+      <button onclick="document.getElementById('prompt-textarea').select();document.execCommand('copy');showToast('Prompt copiado!','info')"
+        style="margin-top:8px;padding:7px 16px;background:#1c1c2e;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer">
+        📋 Copiar prompt
+      </button>
     </div>`;
-  }).join("");
+
+  document.getElementById("btn-ai").innerHTML="↻ Reabrir no Claude";
+  document.getElementById("btn-ai").disabled=false;
 }
+
 
 function showToast(msg,type="info"){
   const t=document.getElementById("toast");
