@@ -165,9 +165,7 @@ input[type=text]:focus,select:focus{outline:none;border-color:var(--amber)}
 
 <script>
 // ══════════════════════════════════════════════════════════════
-const JSONBIN_KEY  = "$2a$10$v4WcIzW3Y1Bl8YpTto5Le.XCUP/Ktkg0Uxe1DN.ofyFQN1QMFRKnK";
-const JSONBIN_BIN  = "683ebc3e8561e97a50204733"; // bin compartilhado
-const JSONBIN_BASE = "https://api.jsonbin.io/v3/b";
+const NPOINT_URL = "https://api.npoint.io/be93e9a35f6735d40446";
 // ══════════════════════════════════════════════════════════════
 
 const SECTIONS=[
@@ -296,26 +294,7 @@ function buildSectionTotals(){
   return t;
 }
 
-async function getBinId(){
-  // Tenta pegar bin_id salvo; se não existir, cria um novo bin
-  let binId = localStorage.getItem("mecanicos_bin_id");
-  if(binId) return binId;
-  // Cria novo bin
-  const res = await fetch(`${JSONBIN_BASE}`,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "X-Master-Key":JSONBIN_KEY,
-      "X-Bin-Name":"avaliacoes-mecanicos",
-      "X-Bin-Private":"false"
-    },
-    body:JSON.stringify([])
-  });
-  const data = await res.json();
-  binId = data.metadata.id;
-  localStorage.setItem("mecanicos_bin_id", binId);
-  return binId;
-}
+
 
 async function submitForm(){
   const nome=document.getElementById("nome").value.trim();
@@ -342,24 +321,19 @@ async function submitForm(){
   };
 
   try{
-    const binId = await getBinId();
-
-    // Ler dados atuais
-    const getRes=await fetch(`${JSONBIN_BASE}/${binId}/latest`,{
-      headers:{"X-Master-Key":JSONBIN_KEY}
-    });
-    const getData=await getRes.json();
-    const current=getData.record||[];
+    // Ler dados atuais do npoint
+    const getRes=await fetch(NPOINT_URL);
+    const current=await getRes.json();
     const list=Array.isArray(current)?current:[];
 
-    // Substituir avaliação anterior do mesmo mecânico
+    // Substituir avaliação anterior do mesmo mecânico (mantém só a mais recente)
     const filtered=list.filter(r=>r.nome!==nome);
     filtered.push(payload);
 
-    // Salvar
-    await fetch(`${JSONBIN_BASE}/${binId}`,{
-      method:"PUT",
-      headers:{"Content-Type":"application/json","X-Master-Key":JSONBIN_KEY},
+    // Salvar de volta no npoint
+    await fetch(NPOINT_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify(filtered)
     });
 
